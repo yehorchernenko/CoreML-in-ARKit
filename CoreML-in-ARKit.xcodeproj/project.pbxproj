@@ -12,6 +12,9 @@
 		43221FAA24D56328005A637E /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 43221FA824D56328005A637E /* Main.storyboard */; };
 		43221FAC24D5632A005A637E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 43221FAB24D5632A005A637E /* Assets.xcassets */; };
 		43221FAF24D5632A005A637E /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 43221FAD24D5632A005A637E /* LaunchScreen.storyboard */; };
+		43E1469624D569BA009046C4 /* ObjectDetectionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43E1469524D569BA009046C4 /* ObjectDetectionService.swift */; };
+		43E1469924D56A85009046C4 /* UIDevice+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43E1469824D56A85009046C4 /* UIDevice+Extension.swift */; };
+		43E1469C24D56BFB009046C4 /* YOLOv3.mlmodel in Sources */ = {isa = PBXBuildFile; fileRef = 43E1469B24D56BFB009046C4 /* YOLOv3.mlmodel */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -22,6 +25,9 @@
 		43221FAB24D5632A005A637E /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		43221FAE24D5632A005A637E /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		43221FB024D5632A005A637E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		43E1469524D569BA009046C4 /* ObjectDetectionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObjectDetectionService.swift; sourceTree = "<group>"; };
+		43E1469824D56A85009046C4 /* UIDevice+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIDevice+Extension.swift"; sourceTree = "<group>"; };
+		43E1469B24D56BFB009046C4 /* YOLOv3.mlmodel */ = {isa = PBXFileReference; lastKnownFileType = file.mlmodel; path = YOLOv3.mlmodel; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -54,14 +60,33 @@
 		43221FA124D56328005A637E /* CoreML-in-ARKit */ = {
 			isa = PBXGroup;
 			children = (
+				43E1469A24D56B6C009046C4 /* Service */,
+				43E1469724D56A79009046C4 /* Extension */,
 				43221FA224D56328005A637E /* AppDelegate.swift */,
 				43221FA624D56328005A637E /* ViewController.swift */,
 				43221FA824D56328005A637E /* Main.storyboard */,
 				43221FAB24D5632A005A637E /* Assets.xcassets */,
+				43E1469B24D56BFB009046C4 /* YOLOv3.mlmodel */,
 				43221FAD24D5632A005A637E /* LaunchScreen.storyboard */,
 				43221FB024D5632A005A637E /* Info.plist */,
 			);
 			path = "CoreML-in-ARKit";
+			sourceTree = "<group>";
+		};
+		43E1469724D56A79009046C4 /* Extension */ = {
+			isa = PBXGroup;
+			children = (
+				43E1469824D56A85009046C4 /* UIDevice+Extension.swift */,
+			);
+			path = Extension;
+			sourceTree = "<group>";
+		};
+		43E1469A24D56B6C009046C4 /* Service */ = {
+			isa = PBXGroup;
+			children = (
+				43E1469524D569BA009046C4 /* ObjectDetectionService.swift */,
+			);
+			path = Service;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -135,7 +160,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				43E1469C24D56BFB009046C4 /* YOLOv3.mlmodel in Sources */,
 				43221FA724D56328005A637E /* ViewController.swift in Sources */,
+				43E1469924D56A85009046C4 /* UIDevice+Extension.swift in Sources */,
+				43E1469624D569BA009046C4 /* ObjectDetectionService.swift in Sources */,
 				43221FA324D56328005A637E /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
