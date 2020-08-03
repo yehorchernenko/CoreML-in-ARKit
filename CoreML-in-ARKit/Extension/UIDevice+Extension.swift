@@ -22,10 +22,10 @@ extension UIDevice {
             case left0ColBottom = 8
         }
         switch orientation {
-            case .portraitUpsideDown: exifOrientation = .left0ColBottom
-            case .landscapeLeft: exifOrientation = .top0ColLeft
-            case .landscapeRight: exifOrientation = .bottom0ColRight
-            default: exifOrientation = .right0ColTop
+        case .portraitUpsideDown: exifOrientation = .left0ColBottom
+        case .landscapeLeft: exifOrientation = .top0ColLeft
+        case .landscapeRight: exifOrientation = .bottom0ColRight
+        default: exifOrientation = .right0ColTop
         }
         return exifOrientation.rawValue
     }

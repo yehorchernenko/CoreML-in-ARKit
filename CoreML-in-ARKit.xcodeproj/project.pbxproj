@@ -7,6 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		43220A9924D59C1B00DD4168 /* BubbleNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43220A9824D59C1B00DD4168 /* BubbleNode.swift */; };
+		43220A9D24D5A0C100DD4168 /* YOLOv3Int8LUT.mlmodel in Sources */ = {isa = PBXBuildFile; fileRef = 43220A9C24D5A0C100DD4168 /* YOLOv3Int8LUT.mlmodel */; };
+		43220AA124D5B25500DD4168 /* Throttler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43220AA024D5B25500DD4168 /* Throttler.swift */; };
+		43220AA324D5C39400DD4168 /* SCNVector3+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43220AA224D5C39400DD4168 /* SCNVector3+Extension.swift */; };
 		43221FA324D56328005A637E /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43221FA224D56328005A637E /* AppDelegate.swift */; };
 		43221FA724D56328005A637E /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43221FA624D56328005A637E /* ViewController.swift */; };
 		43221FAA24D56328005A637E /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 43221FA824D56328005A637E /* Main.storyboard */; };
@@ -14,10 +18,13 @@
 		43221FAF24D5632A005A637E /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 43221FAD24D5632A005A637E /* LaunchScreen.storyboard */; };
 		43E1469624D569BA009046C4 /* ObjectDetectionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43E1469524D569BA009046C4 /* ObjectDetectionService.swift */; };
 		43E1469924D56A85009046C4 /* UIDevice+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43E1469824D56A85009046C4 /* UIDevice+Extension.swift */; };
-		43E1469C24D56BFB009046C4 /* YOLOv3.mlmodel in Sources */ = {isa = PBXBuildFile; fileRef = 43E1469B24D56BFB009046C4 /* YOLOv3.mlmodel */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		43220A9824D59C1B00DD4168 /* BubbleNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BubbleNode.swift; sourceTree = "<group>"; };
+		43220A9C24D5A0C100DD4168 /* YOLOv3Int8LUT.mlmodel */ = {isa = PBXFileReference; lastKnownFileType = file.mlmodel; path = YOLOv3Int8LUT.mlmodel; sourceTree = "<group>"; };
+		43220AA024D5B25500DD4168 /* Throttler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Throttler.swift; sourceTree = "<group>"; };
+		43220AA224D5C39400DD4168 /* SCNVector3+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SCNVector3+Extension.swift"; sourceTree = "<group>"; };
 		43221F9F24D56328005A637E /* CoreML-in-ARKit.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "CoreML-in-ARKit.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		43221FA224D56328005A637E /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		43221FA624D56328005A637E /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -27,7 +34,6 @@
 		43221FB024D5632A005A637E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		43E1469524D569BA009046C4 /* ObjectDetectionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObjectDetectionService.swift; sourceTree = "<group>"; };
 		43E1469824D56A85009046C4 /* UIDevice+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIDevice+Extension.swift"; sourceTree = "<group>"; };
-		43E1469B24D56BFB009046C4 /* YOLOv3.mlmodel */ = {isa = PBXFileReference; lastKnownFileType = file.mlmodel; path = YOLOv3.mlmodel; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -60,23 +66,41 @@
 		43221FA124D56328005A637E /* CoreML-in-ARKit */ = {
 			isa = PBXGroup;
 			children = (
+				438F259A24D8967300B80D7E /* App */,
+				438F259924D8960E00B80D7E /* Controller */,
 				43E1469A24D56B6C009046C4 /* Service */,
 				43E1469724D56A79009046C4 /* Extension */,
-				43221FA224D56328005A637E /* AppDelegate.swift */,
-				43221FA624D56328005A637E /* ViewController.swift */,
+			);
+			path = "CoreML-in-ARKit";
+			sourceTree = "<group>";
+		};
+		438F259924D8960E00B80D7E /* Controller */ = {
+			isa = PBXGroup;
+			children = (
 				43221FA824D56328005A637E /* Main.storyboard */,
+				43221FA624D56328005A637E /* ViewController.swift */,
+				43220A9824D59C1B00DD4168 /* BubbleNode.swift */,
+			);
+			name = Controller;
+			sourceTree = "<group>";
+		};
+		438F259A24D8967300B80D7E /* App */ = {
+			isa = PBXGroup;
+			children = (
+				43221FA224D56328005A637E /* AppDelegate.swift */,
+				43220A9C24D5A0C100DD4168 /* YOLOv3Int8LUT.mlmodel */,
 				43221FAB24D5632A005A637E /* Assets.xcassets */,
-				43E1469B24D56BFB009046C4 /* YOLOv3.mlmodel */,
 				43221FAD24D5632A005A637E /* LaunchScreen.storyboard */,
 				43221FB024D5632A005A637E /* Info.plist */,
 			);
-			path = "CoreML-in-ARKit";
+			path = App;
 			sourceTree = "<group>";
 		};
 		43E1469724D56A79009046C4 /* Extension */ = {
 			isa = PBXGroup;
 			children = (
 				43E1469824D56A85009046C4 /* UIDevice+Extension.swift */,
+				43220AA224D5C39400DD4168 /* SCNVector3+Extension.swift */,
 			);
 			path = Extension;
 			sourceTree = "<group>";
@@ -85,6 +109,7 @@
 			isa = PBXGroup;
 			children = (
 				43E1469524D569BA009046C4 /* ObjectDetectionService.swift */,
+				43220AA024D5B25500DD4168 /* Throttler.swift */,
 			);
 			path = Service;
 			sourceTree = "<group>";
@@ -160,9 +185,12 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				43E1469C24D56BFB009046C4 /* YOLOv3.mlmodel in Sources */,
+				43220AA324D5C39400DD4168 /* SCNVector3+Extension.swift in Sources */,
 				43221FA724D56328005A637E /* ViewController.swift in Sources */,
 				43E1469924D56A85009046C4 /* UIDevice+Extension.swift in Sources */,
+				43220AA124D5B25500DD4168 /* Throttler.swift in Sources */,
+				43220A9924D59C1B00DD4168 /* BubbleNode.swift in Sources */,
+				43220A9D24D5A0C100DD4168 /* YOLOv3Int8LUT.mlmodel in Sources */,
 				43E1469624D569BA009046C4 /* ObjectDetectionService.swift in Sources */,
 				43221FA324D56328005A637E /* AppDelegate.swift in Sources */,
 			);
@@ -310,7 +338,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = BB6356MAF8;
-				INFOPLIST_FILE = "CoreML-in-ARKit/Info.plist";
+				INFOPLIST_FILE = "CoreML-in-ARKit/App/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -329,7 +357,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = BB6356MAF8;
-				INFOPLIST_FILE = "CoreML-in-ARKit/Info.plist";
+				INFOPLIST_FILE = "CoreML-in-ARKit/App/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",

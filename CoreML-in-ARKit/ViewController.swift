@@ -7,13 +7,16 @@
 //
 
 import UIKit
-import SceneKit
+import Vision
 import ARKit
+
 
 class ViewController: UIViewController {
     var objectDetectionService: ObjectRecognitionServiceType = ObjectRecognitionService()
+    let throttler = Throttler(minimumDelay: 1, queue: .global(qos: .userInteractive))
     var isLoopShouldContinue = true
-    
+    var lastLocation: SCNVector3?
+
     @IBOutlet var sceneView: ARSCNView!
     @IBOutlet weak var sessionInfoLabel: UILabel!
     
@@ -24,9 +27,12 @@ class ViewController: UIViewController {
         sceneView.session.delegate = self
         sceneView.scene = SCNScene()
         
-        // Debug
-        sceneView.showsStatistics = true
-        sceneView.debugOptions = [.showFeaturePoints]
+        // Enable Default Lighting - makes the 3D text a bit poppier.
+        sceneView.autoenablesDefaultLighting = true
+        
+//        // Debug
+//        sceneView.showsStatistics = true
+//        sceneView.debugOptions = [.showFeaturePoints]
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -57,7 +63,9 @@ class ViewController: UIViewController {
     }
     
     private func loopObjectDetection() {
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+        throttler.throttle { [weak self] in
+            guard let self = self else { return }
+            
             if self.isLoopShouldContinue {
                 self.performDetection()
             }
@@ -69,16 +77,49 @@ class ViewController: UIViewController {
         guard let pixelBuffer = sceneView.session.currentFrame?.capturedImage else { return }
         
         objectDetectionService.detect(on: .init(pixelBuffer: pixelBuffer)) { [weak self] result in
+            guard let self = self else { return }
             switch result {
             case .success(let response):
-                print(response.classification)
+                let rectOfInterest = VNImageRectForNormalizedRect(
+                    response.boundingBox,
+                    Int(self.sceneView.bounds.width),
+                    Int(self.sceneView.bounds.height))
+                self.addAnnotation(rectOfInterest: rectOfInterest,
+                                   text: response.classification)
+            
             case .failure(let error):
                 print(error)
             }
         }
     }
+    
+    private func addAnnotation(rectOfInterest rect: CGRect, text: String) {
+        let point = CGPoint(x: rect.midX, y: rect.midY)
+        let scnHitTestResults = sceneView.hitTest(point, options: [SCNHitTestOption.searchMode: SCNHitTestSearchMode.all.rawValue])
+        
+        guard !scnHitTestResults.contains(where: { $0.node.name == BubbleNode.name }),
+            let arHitTestResult = sceneView.hitTest(point, types: .existingPlane).last,
+            let cameraPosition = sceneView.pointOfView?.position else { return }
+        
+        let position = SCNVector3(arHitTestResult.worldTransform.columns.3.x,
+                                  arHitTestResult.worldTransform.columns.3.y,
+                                  arHitTestResult.worldTransform.columns.3.z)
 
-    func onSessionUpdate(for frame: ARFrame, trackingState: ARCamera.TrackingState) {
+        let distance = (position - cameraPosition).length()
+        
+        guard distance <= 0.35 else { return }
+        
+        let bubbleNode = BubbleNode(text: text)
+        bubbleNode.worldPosition = position
+        
+        sceneView.prepare([bubbleNode]) { [weak self] success in
+            if success {
+                self?.sceneView.scene.rootNode.addChildNode(bubbleNode)
+            }
+        }
+    }
+
+    private func onSessionUpdate(for frame: ARFrame, trackingState: ARCamera.TrackingState) {
         isLoopShouldContinue = false
 
         // Update the UI to provide feedback on the state of the AR experience.
@@ -147,5 +188,20 @@ extension ViewController: ARSessionDelegate {
     func session(_ session: ARSession, didRemove anchors: [ARAnchor]) {
         guard let frame = session.currentFrame else { return }
         onSessionUpdate(for: frame, trackingState: frame.camera.trackingState)
+    }
+    
+    func session(_ session: ARSession, didUpdate frame: ARFrame) {
+        ///Check speed of movement, if to fast - stops object detection loop
+        let transform = SCNMatrix4(frame.camera.transform)
+        let orientation = SCNVector3(-transform.m31, -transform.m32, transform.m33)
+        let location = SCNVector3(transform.m41, transform.m42, transform.m43)
+        let currentPositionOfCamera = orientation + location
+        
+        if let lastLocation = lastLocation {
+            let speed = (lastLocation - currentPositionOfCamera).length()
+            isLoopShouldContinue = speed < 0.0025
+            
+        }
+        lastLocation = currentPositionOfCamera
     }
 }

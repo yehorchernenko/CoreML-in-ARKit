@@ -16,10 +16,10 @@ protocol ObjectRecognitionServiceType {
 }
 
 class ObjectRecognitionService: ObjectRecognitionServiceType {
-    static var mlModel = try? VNCoreMLModel(for: YOLOv3().model)
+    var mlModel = try? VNCoreMLModel(for: YOLOv3Int8LUT().model)
     
     lazy var coreMLRequest: VNCoreMLRequest = {
-        guard let model = Self.mlModel else {
+        guard let model = mlModel else {
             completion?(.failure(RecognitionError.unableToInitializeCoreMLModel))
             fatalError()
         }
@@ -42,19 +42,14 @@ class ObjectRecognitionService: ObjectRecognitionServiceType {
 private extension ObjectRecognitionService {
     
     func performRecognition(request: VNRequest, image: CVPixelBuffer, orientation: CGImagePropertyOrientation) {
-        // Create a request handler.
         let imageRequestHandler = VNImageRequestHandler(cvPixelBuffer: image,
                                                         orientation: CGImagePropertyOrientation(rawValue:  UIDevice.current.exifOrientation) ?? .up)
         
-        
-        // Send the requests to the request handler.
-        DispatchQueue.global(qos: .userInitiated).async {
-            do {
-                try imageRequestHandler.perform([request])
-            } catch {
-                self.completion?(.failure(error))
-                return
-            }
+        do {
+            try imageRequestHandler.perform([request])
+        } catch {
+            self.completion?(.failure(error))
+            return
         }
     }
     
@@ -65,7 +60,7 @@ private extension ObjectRecognitionService {
         }
         
         guard let request = request, let results = request.results as? [VNRecognizedObjectObservation] else {
-            completion?(.failure(RecognitionError.requestIsNil))
+            completion?(.failure(RecognitionError.resultIsEmpty))
             return
         }
         
@@ -77,15 +72,12 @@ private extension ObjectRecognitionService {
     
     func complete(_ result: VNRecognizedObjectObservation?) {
         guard let result = result,
-            let request = request,
             let classification = result.labels.first else {
                 completion?(.failure(RecognitionError.lowConfidence))
                 return
         }
-        let image = UIImage(ciImage: CIImage(cvPixelBuffer: request.pixelBuffer)
-                                .oriented(forExifOrientation: Int32(UIDevice.current.exifOrientation)))
-        let response = Response(image: image,
-                                boundingBox: result.boundingBox,
+        
+        let response = Response(boundingBox: result.boundingBox,
                                 classification: classification.identifier)
         
         DispatchQueue.main.async {
@@ -97,9 +89,8 @@ private extension ObjectRecognitionService {
 }
 
 enum RecognitionError: Error {
-    case cgImageIsNil
     case unableToInitializeCoreMLModel
-    case requestIsNil
+    case resultIsEmpty
     case lowConfidence
 }
 
@@ -109,7 +100,6 @@ extension ObjectRecognitionService {
     }
     
     struct Response {
-        let image: UIImage
         let boundingBox: CGRect
         let classification: String
     }
