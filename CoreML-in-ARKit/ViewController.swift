@@ -12,7 +12,7 @@ import ARKit
 
 
 class ViewController: UIViewController {
-    var objectDetectionService: ObjectRecognitionServiceType = ObjectRecognitionService()
+    var objectDetectionService = ObjectDetectionService()
     let throttler = Throttler(minimumDelay: 1, queue: .global(qos: .userInteractive))
     var isLoopShouldContinue = true
     var lastLocation: SCNVector3?
@@ -30,7 +30,7 @@ class ViewController: UIViewController {
         // Enable Default Lighting - makes the 3D text a bit poppier.
         sceneView.autoenablesDefaultLighting = true
         
-//        // Debug
+        // Debug
 //        sceneView.showsStatistics = true
 //        sceneView.debugOptions = [.showFeaturePoints]
     }
@@ -47,7 +47,7 @@ class ViewController: UIViewController {
         stopSession()
     }
     
-    private func startSession() {
+    private func startSession(resetTracking: Bool = false) {
         guard ARWorldTrackingConfiguration.isSupported else {
             assertionFailure("ARKit is not supported")
             return
@@ -55,14 +55,18 @@ class ViewController: UIViewController {
         let configuration = ARWorldTrackingConfiguration()
         configuration.planeDetection = .horizontal
         
-        sceneView.session.run(configuration)
+        if resetTracking {
+            sceneView.session.run(configuration, options: [.resetTracking, .removeExistingAnchors])
+        } else {
+            sceneView.session.run(configuration)
+        }
     }
     
-    private func stopSession() {
+    func stopSession() {
         sceneView.session.pause()
     }
     
-    private func loopObjectDetection() {
+    func loopObjectDetection() {
         throttler.throttle { [weak self] in
             guard let self = self else { return }
             
@@ -73,7 +77,7 @@ class ViewController: UIViewController {
         }
     }
     
-    private func performDetection() {
+    func performDetection() {
         guard let pixelBuffer = sceneView.session.currentFrame?.capturedImage else { return }
         
         objectDetectionService.detect(on: .init(pixelBuffer: pixelBuffer)) { [weak self] result in
@@ -88,26 +92,29 @@ class ViewController: UIViewController {
                                    text: response.classification)
             
             case .failure(let error):
-                print(error)
+                break
             }
         }
     }
     
-    private func addAnnotation(rectOfInterest rect: CGRect, text: String) {
+    func addAnnotation(rectOfInterest rect: CGRect, text: String) {
         let point = CGPoint(x: rect.midX, y: rect.midY)
-        let scnHitTestResults = sceneView.hitTest(point, options: [SCNHitTestOption.searchMode: SCNHitTestSearchMode.all.rawValue])
         
-        guard !scnHitTestResults.contains(where: { $0.node.name == BubbleNode.name }),
-            let arHitTestResult = sceneView.hitTest(point, types: .existingPlane).last,
-            let cameraPosition = sceneView.pointOfView?.position else { return }
+        let scnHitTestResults = sceneView.hitTest(point,
+                                                  options: [SCNHitTestOption.searchMode: SCNHitTestSearchMode.all.rawValue])
+        guard !scnHitTestResults.contains(where: { $0.node.name == BubbleNode.name }) else { return }
         
-        let position = SCNVector3(arHitTestResult.worldTransform.columns.3.x,
-                                  arHitTestResult.worldTransform.columns.3.y,
-                                  arHitTestResult.worldTransform.columns.3.z)
+        guard let raycastQuery = sceneView.raycastQuery(from: point,
+                                                        allowing: .existingPlaneInfinite,
+                                                        alignment: .horizontal),
+              let raycastResult = sceneView.session.raycast(raycastQuery).first else { return }
+        let position = SCNVector3(raycastResult.worldTransform.columns.3.x,
+                                  raycastResult.worldTransform.columns.3.y,
+                                  raycastResult.worldTransform.columns.3.z)
 
+        guard let cameraPosition = sceneView.pointOfView?.position else { return }
         let distance = (position - cameraPosition).length()
-        
-        guard distance <= 0.35 else { return }
+        guard distance <= 0.5 else { return }
         
         let bubbleNode = BubbleNode(text: text)
         bubbleNode.worldPosition = position
@@ -155,10 +162,33 @@ class ViewController: UIViewController {
     }
 }
 
-extension ViewController: ARSCNViewDelegate {
+extension ViewController: ARSessionDelegate {
     func session(_ session: ARSession, cameraDidChangeTrackingState camera: ARCamera) {
         guard let frame = session.currentFrame else { return }
         onSessionUpdate(for: frame, trackingState: camera.trackingState)
+    }
+    
+    func session(_ session: ARSession, didAdd anchors: [ARAnchor]) {
+        guard let frame = session.currentFrame else { return }
+        onSessionUpdate(for: frame, trackingState: frame.camera.trackingState)
+    }
+    
+    func session(_ session: ARSession, didRemove anchors: [ARAnchor]) {
+        guard let frame = session.currentFrame else { return }
+        onSessionUpdate(for: frame, trackingState: frame.camera.trackingState)
+    }
+    
+    func session(_ session: ARSession, didUpdate frame: ARFrame) {
+        let transform = SCNMatrix4(frame.camera.transform)
+        let orientation = SCNVector3(-transform.m31, -transform.m32, transform.m33)
+        let location = SCNVector3(transform.m41, transform.m42, transform.m43)
+        let currentPositionOfCamera = orientation + location
+        
+        if let lastLocation = lastLocation {
+            let speed = (lastLocation - currentPositionOfCamera).length()
+            isLoopShouldContinue = speed < 0.0025
+        }
+        lastLocation = currentPositionOfCamera
     }
     
     // MARK: - ARSessionObserver
@@ -171,7 +201,7 @@ extension ViewController: ARSCNViewDelegate {
     func sessionInterruptionEnded(_ session: ARSession) {
         // Reset tracking and/or remove existing anchors if consistent tracking is required.
         sessionInfoLabel.text = "Session interruption ended"
-        startSession()
+        startSession(resetTracking: true)
     }
     
     func session(_ session: ARSession, didFailWithError error: Error) {
@@ -179,29 +209,4 @@ extension ViewController: ARSCNViewDelegate {
     }
 }
 
-extension ViewController: ARSessionDelegate {
-    func session(_ session: ARSession, didAdd anchors: [ARAnchor]) {
-        guard let frame = session.currentFrame else { return }
-        onSessionUpdate(for: frame, trackingState: frame.camera.trackingState)
-    }
-    
-    func session(_ session: ARSession, didRemove anchors: [ARAnchor]) {
-        guard let frame = session.currentFrame else { return }
-        onSessionUpdate(for: frame, trackingState: frame.camera.trackingState)
-    }
-    
-    func session(_ session: ARSession, didUpdate frame: ARFrame) {
-        ///Check speed of movement, if to fast - stops object detection loop
-        let transform = SCNMatrix4(frame.camera.transform)
-        let orientation = SCNVector3(-transform.m31, -transform.m32, transform.m33)
-        let location = SCNVector3(transform.m41, transform.m42, transform.m43)
-        let currentPositionOfCamera = orientation + location
-        
-        if let lastLocation = lastLocation {
-            let speed = (lastLocation - currentPositionOfCamera).length()
-            isLoopShouldContinue = speed < 0.0025
-            
-        }
-        lastLocation = currentPositionOfCamera
-    }
-}
+extension ViewController: ARSCNViewDelegate { }

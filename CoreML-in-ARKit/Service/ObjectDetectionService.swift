@@ -11,79 +11,60 @@ import CoreML
 import Vision
 import SceneKit
 
-protocol ObjectRecognitionServiceType {
-    func detect(on request: ObjectRecognitionService.Request, completion: @escaping (Result<ObjectRecognitionService.Response, Error>) -> Void)
-}
-
-class ObjectRecognitionService: ObjectRecognitionServiceType {
-    var mlModel = try? VNCoreMLModel(for: YOLOv3Int8LUT().model)
+class ObjectDetectionService {
+    var mlModel = try! VNCoreMLModel(for: YOLOv3Int8LUT().model)
     
     lazy var coreMLRequest: VNCoreMLRequest = {
-        guard let model = mlModel else {
-            completion?(.failure(RecognitionError.unableToInitializeCoreMLModel))
-            fatalError()
-        }
-        
-        return VNCoreMLRequest(model: model,
+        return VNCoreMLRequest(model: mlModel,
                                completionHandler: self.coreMlRequestHandler)
     }()
     
     private var completion: ((Result<Response, Error>) -> Void)?
-    private var request: Request?
     
     func detect(on request: Request, completion: @escaping (Result<Response, Error>) -> Void) {
         self.completion = completion
-        self.request = request
         
-        performRecognition(request: coreMLRequest, image: request.pixelBuffer, orientation: .up)
-    }
-}
-
-private extension ObjectRecognitionService {
-    
-    func performRecognition(request: VNRequest, image: CVPixelBuffer, orientation: CGImagePropertyOrientation) {
-        let imageRequestHandler = VNImageRequestHandler(cvPixelBuffer: image,
-                                                        orientation: CGImagePropertyOrientation(rawValue:  UIDevice.current.exifOrientation) ?? .up)
+        let orientation = CGImagePropertyOrientation(rawValue:  UIDevice.current.exifOrientation) ?? .up
+        let imageRequestHandler = VNImageRequestHandler(cvPixelBuffer: request.pixelBuffer,
+                                                        orientation: orientation)
         
         do {
-            try imageRequestHandler.perform([request])
+            try imageRequestHandler.perform([coreMLRequest])
         } catch {
-            self.completion?(.failure(error))
+            self.complete(.failure(error))
             return
         }
     }
-    
+}
+
+private extension ObjectDetectionService {
     func coreMlRequestHandler(_ request: VNRequest?, error: Error?) {
         if let error = error {
-            completion?(.failure(error))
+            complete(.failure(error))
             return
         }
         
         guard let request = request, let results = request.results as? [VNRecognizedObjectObservation] else {
-            completion?(.failure(RecognitionError.resultIsEmpty))
+            complete(.failure(RecognitionError.resultIsEmpty))
             return
         }
         
-        let highConfidenceResult = results
-            .first { $0.confidence > 0.8 }
-        
-        complete(highConfidenceResult)
-    }
-    
-    func complete(_ result: VNRecognizedObjectObservation?) {
-        guard let result = result,
+        guard let result = results.first(where: { $0.confidence > 0.8 }),
             let classification = result.labels.first else {
-                completion?(.failure(RecognitionError.lowConfidence))
+                complete(.failure(RecognitionError.lowConfidence))
                 return
         }
         
         let response = Response(boundingBox: result.boundingBox,
                                 classification: classification.identifier)
         
+        complete(.success(response))
+    }
+    
+    func complete(_ result: Result<Response, Error>) {
         DispatchQueue.main.async {
-            self.completion?(.success(response))
+            self.completion?(result)
             self.completion = nil
-            self.request = nil
         }
     }
 }
@@ -94,7 +75,7 @@ enum RecognitionError: Error {
     case lowConfidence
 }
 
-extension ObjectRecognitionService {
+extension ObjectDetectionService {
     struct Request {
         let pixelBuffer: CVPixelBuffer
     }
